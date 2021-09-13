@@ -6,8 +6,8 @@ imu: 1
 num_of_cam: 2
 
 imu_topic: "/p450_D435i/imu_gazebo"
-image0_topic: "/p450_D435i/stereo_camera/left/image_raw"
-image1_topic: "/p450_D435i/stereo_camera/right/image_raw"
+image0_topic: "/p450_D435i/stereo_camera/left/image_raw/compressed"
+image1_topic: "/p450_D435i/stereo_camera/right/image_raw/compressed"
 output_path: "~/catkin_ws/vins_output"
 
 cam0_calib: "cam0_pinhole_p1.yaml"

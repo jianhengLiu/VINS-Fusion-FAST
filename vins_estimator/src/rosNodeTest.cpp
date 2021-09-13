@@ -30,19 +30,19 @@ Estimator estimator;
 
 queue<sensor_msgs::ImuConstPtr> imu_buf;
 queue<sensor_msgs::PointCloudConstPtr> feature_buf;
-queue<sensor_msgs::ImageConstPtr> img0_buf;
-queue<sensor_msgs::ImageConstPtr> img1_buf;
+queue<sensor_msgs::CompressedImageConstPtr> img0_buf;
+queue<sensor_msgs::CompressedImageConstPtr> img1_buf;
 std::mutex m_buf;
 
 
-void img0_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void img0_callback(const sensor_msgs::CompressedImageConstPtr &img_msg)
 {
     m_buf.lock();
     img0_buf.push(img_msg);
     m_buf.unlock();
 }
 
-void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void img1_callback(const sensor_msgs::CompressedImageConstPtr &img_msg)
 {
     m_buf.lock();
     img1_buf.push(img_msg);
@@ -50,22 +50,22 @@ void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
 }
 
 
-cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
+cv::Mat getImageFromMsg(const sensor_msgs::CompressedImageConstPtr &img_msg)
 {
     cv_bridge::CvImageConstPtr ptr;
-    if (img_msg->encoding == "8UC1")
-    {
-        sensor_msgs::Image img;
-        img.header = img_msg->header;
-        img.height = img_msg->height;
-        img.width = img_msg->width;
-        img.is_bigendian = img_msg->is_bigendian;
-        img.step = img_msg->step;
-        img.data = img_msg->data;
-        img.encoding = "mono8";
-        ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
-    }
-    else
+//    if (img_msg->encoding == "8UC1")
+//    {
+//        sensor_msgs::Image img;
+//        img.header = img_msg->header;
+//        img.height = img_msg->height;
+//        img.width = img_msg->width;
+//        img.is_bigendian = img_msg->is_bigendian;
+//        img.step = img_msg->step;
+//        img.data = img_msg->data;
+//        img.encoding = "mono8";
+//        ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::MONO8);
+//    }
+//    else
         ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
 
     cv::Mat img = ptr->image.clone();
@@ -155,40 +155,6 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
     return;
 }
 
-
-void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
-{
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame;
-    for (unsigned int i = 0; i < feature_msg->points.size(); i++)
-    {
-        int feature_id = feature_msg->channels[0].values[i];
-        int camera_id = feature_msg->channels[1].values[i];
-        double x = feature_msg->points[i].x;
-        double y = feature_msg->points[i].y;
-        double z = feature_msg->points[i].z;
-        double p_u = feature_msg->channels[2].values[i];
-        double p_v = feature_msg->channels[3].values[i];
-        double velocity_x = feature_msg->channels[4].values[i];
-        double velocity_y = feature_msg->channels[5].values[i];
-        if(feature_msg->channels.size() > 5)
-        {
-            double gx = feature_msg->channels[6].values[i];
-            double gy = feature_msg->channels[7].values[i];
-            double gz = feature_msg->channels[8].values[i];
-            pts_gt[feature_id] = Eigen::Vector3d(gx, gy, gz);
-            //printf("receive pts gt %d %f %f %f\n", feature_id, gx, gy, gz);
-        }
-        ROS_ASSERT(z == 1);
-        Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
-        xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
-        featureFrame[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
-    }
-    //double t = feature_msg->header.stamp.toSec();
-    ros::Time time_stamp = feature_msg->header.stamp;
-    estimator.inputFeature(time_stamp, featureFrame);
-    return;
-}
-
 void restart_callback(const std_msgs::BoolConstPtr &restart_msg)
 {
     if (restart_msg->data == true)
@@ -235,7 +201,6 @@ int main(int argc, char **argv)
     registerPub(n);
 
     ros::Subscriber sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_feature = n.subscribe("/feature_tracker/feature", 2000, feature_callback);
     ros::Subscriber sub_img0 = n.subscribe(IMAGE0_TOPIC, 100, img0_callback, ros::TransportHints().tcpNoDelay());
     ros::Subscriber sub_img1 = n.subscribe(IMAGE1_TOPIC, 100, img1_callback, ros::TransportHints().tcpNoDelay());
 

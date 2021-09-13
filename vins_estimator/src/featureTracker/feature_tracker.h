@@ -40,6 +40,7 @@ public:
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(double _cur_time, const cv::Mat &_img, const cv::Mat &_img1 = cv::Mat());
     void setMask();
     void addPoints();
+    void addPoints(int n_max_cnt);
     void readIntrinsicParameter(const vector<string> &calib_file);
     void showUndistortion(const string &name);
     void rejectWithF();
@@ -66,6 +67,8 @@ public:
     cv::Mat fisheye_mask;
     cv::Mat prev_img, cur_img;
     vector<cv::Point2f> n_pts;
+    vector<cv::KeyPoint> Keypts;
+    vector<cv::Point2f> unstable_pts;
     vector<cv::Point2f> predict_pts;
     vector<cv::Point2f> predict_pts_debug;
     vector<cv::Point2f> prev_pts, cur_pts, cur_right_pts;

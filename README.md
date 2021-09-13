@@ -1,4 +1,14 @@
+# VINS-Fusion-FAST
+
+```
+cating_make
+sh ./src/VINS-Fusion-FAST/scripts/xtdrone_run_vio.sh
+```
+
+
+
 # VINS-Fusion
+
 ## An optimization-based multi-sensor state estimator
 **In our experiment, we use images from realsense D435i and Imu from N3 controller to run VINS-Fusion.** 
 
@@ -33,7 +43,7 @@ Subscribers:
  /djiros/imu:  [sensor_msgs/Imu]                        imu messages for VINS-Fusion getting from djiros 
  /camera/infra1/image_rect_raw: [sensor_msgs/Image]     left image for VINS-Fusion getting from realsense D435i 
  /camera/infra2/image_rect_raw: [sensor_msgs/Image]     right image for VINS-Fusion getting from realsense D435i 
-``` 
+```
 
 Publishers:
 ```

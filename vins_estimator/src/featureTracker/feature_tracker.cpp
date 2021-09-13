@@ -81,6 +81,9 @@ void FeatureTracker::setMask()
             cv::circle(mask, it.second.first, MIN_DIST, 0, -1);
         }
     }
+    for (auto &pt : unstable_pts) {
+        cv::circle(mask, pt, MIN_DIST, 0, -1);
+    }
 }
 
 void FeatureTracker::addPoints()
@@ -92,6 +95,30 @@ void FeatureTracker::addPoints()
         track_cnt.push_back(1);
     }
 }
+void FeatureTracker::addPoints(int n_max_cnt) {
+    if (Keypts.empty()) {
+        return;
+    }
+
+    sort(Keypts.begin(), Keypts.end(),
+         [](const cv::KeyPoint &a, const cv::KeyPoint &b) {
+             return a.response > b.response;
+         });
+
+    int n_add = 0;
+    for (auto & Keypt : Keypts) {
+        if (mask.at<uchar>(Keypt.pt) == 255) {
+            cur_pts.push_back(Keypt.pt);
+            ids.push_back(n_id++);
+            track_cnt.push_back(1);
+            cv::circle(mask, Keypt.pt, MIN_DIST, 0, -1);// cl: prevent close feature selected
+            n_add++;
+            if (n_add == n_max_cnt) {
+                break;
+            }
+        }
+    }
+}
 
 double FeatureTracker::distance(cv::Point2f &pt1, cv::Point2f &pt2)
 {
@@ -101,6 +128,7 @@ double FeatureTracker::distance(cv::Point2f &pt1, cv::Point2f &pt2)
     return sqrt(dx * dx + dy * dy);
 }
 
+cv::Ptr<cv::FastFeatureDetector> p_fast_feature_detector = cv::FastFeatureDetector::create();
 map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackImage(double _cur_time, const cv::Mat &_img, const cv::Mat &_img1)
 {
     TicToc t_r;
@@ -118,6 +146,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     }
     */
     cur_pts.clear();
+    unstable_pts.clear();//cl
 
     if (prev_pts.size() > 0)
     {
@@ -161,8 +190,16 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         }
         
         for (int i = 0; i < int(cur_pts.size()); i++)
-            if (status[i] && !inBorder(cur_pts[i]))
+        {
+            // cl: strore unstable_pts
+            if (!status[i] && inBorder(cur_pts[i])) {
+                unstable_pts.push_back(cur_pts[i]);
+            } else if (status[i] && !inBorder(cur_pts[i])) {
                 status[i] = 0;
+            }
+//            if (status[i] && !inBorder(cur_pts[i]))
+//                status[i] = 0;
+        }
         reduceVector(prev_pts, status);
         reduceVector(cur_pts, status);
         reduceVector(ids, status);
@@ -191,15 +228,21 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
                 cout << "mask is empty " << endl;
             if (mask.type() != CV_8UC1)
                 cout << "mask type wrong " << endl;
-            cv::goodFeaturesToTrack(cur_img, n_pts, MAX_CNT - cur_pts.size(), 0.01, MIN_DIST, mask);
+
+            p_fast_feature_detector->detect(cur_img, Keypts, mask);
+//            cv::goodFeaturesToTrack(cur_img, n_pts, MAX_CNT - cur_pts.size(), 0.01, MIN_DIST, mask);
         }
         else
+        {
             n_pts.clear();
+            Keypts.clear();
+        }
         ROS_DEBUG("detect feature costs: %fms", t_t.toc());
 
         ROS_DEBUG("add feature begins");
         TicToc t_a;
-        addPoints();
+//        addPoints();
+        addPoints(MAX_CNT - cur_pts.size());//cl
         ROS_DEBUG("selectFeature costs: %fms", t_a.toc());
     }
 
