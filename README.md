@@ -5,7 +5,11 @@ cating_make
 sh ./src/VINS-Fusion-FAST/scripts/xtdrone_run_vio.sh
 ```
 
-
+**backward-cpp安装方法**
+```
+sudo apt-get install libdw-dev
+sudo wget -p /usr/include https://github.com/bombela/backward-cpp/blob/master/backward.hpp
+```
 
 # VINS-Fusion
 
