@@ -5,11 +5,26 @@ cating_make
 sh ./src/VINS-Fusion-FAST/scripts/xtdrone_run_vio.sh
 ```
 
-**backward-cpp安装方法**
+## Dependencies
+
+**backward-cpp**
+
 ```
 sudo apt-get install libdw-dev
-sudo wget -p /usr/include https://github.com/bombela/backward-cpp/blob/master/backward.hpp
+wget https://raw.githubusercontent.com/bombela/backward-cpp/master/backward.hpp
+sudo mv backward.hpp /usr/include
 ```
+
+
+
+## Usage
+
+**[EuRoC MAV Dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) Example**
+
+    roslaunch vins vins_rviz.launch
+    rosrun vins vins_node src/VINS-Fusion-FAST/config/euroc/euroc_stereo_imu_config.yaml
+    (optional) rosrun loop_fusion loop_fusion_node src/VINS-Fusion-FAST/config/euroc/euroc_stereo_imu_config.yaml
+    rosbag play YOUR_DATASET_FOLDER/MH_01_easy.bag
 
 # VINS-Fusion
 
