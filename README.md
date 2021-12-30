@@ -24,6 +24,8 @@ sudo mv backward.hpp /usr/include
     roslaunch vins vins_rviz.launch
     rosrun vins vins_node src/VINS-Fusion-FAST/config/euroc/euroc_stereo_imu_config.yaml
     (optional) rosrun loop_fusion loop_fusion_node src/VINS-Fusion-FAST/config/euroc/euroc_stereo_imu_config.yaml
+    rosrun image_transport republish raw in:=/cam0/image_raw compressed out:=/cam0/image_raw
+    rosrun image_transport republish raw in:=/cam1/image_raw compressed out:=/cam1/image_raw
     rosbag play YOUR_DATASET_FOLDER/MH_01_easy.bag
 
 # VINS-Fusion
